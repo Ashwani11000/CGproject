@@ -1,7 +1,25 @@
+#include<stdio.h>
+#include<stdlib.h>
+#include <GL/glut.h>
+#include<GL/gl.h>
+#include<GL/glu.h>
 
- #include <GL/glut.h>
   int ww = 600, wh = 500;
-  
+  float bgCol[3] = {0.2, 0.4,0.0};
+  float intCol[3] = {1.0,0.0,0.0};
+  float fillCol[3] = {1.0,1.0,1.0};
+      void setPixel(int pointx, int pointy, float f[3])
+      {
+             glBegin(GL_POINTS);
+                  glColor3fv(f);
+                  glVertex2i(pointx,pointy);
+             glEnd();
+             glFlush();
+      }
+      void getPixel(int x, int y, float pixels[3])
+      {
+           glReadPixels(x,y,1.0,1.0,GL_RGB,GL_FLOAT,pixels);
+      }
       void drawPolygon(int x1, int y1, int x2, int y2)
        {
              glColor3f(1.0, 0.0, 0.0);
@@ -20,7 +38,37 @@
              drawPolygon(150,250,200,300);
              glFlush();
        }
-       
+       void floodfill4(int x,int y,float oldcolor[3],float newcolor[3])
+       {
+            float color[3];
+            getPixel(x,y,color);
+            if(color[0]==oldcolor[0] && (color[1])==oldcolor[1] && (color[2])==oldcolor[2])
+            {
+                     setPixel(x,y,newcolor);
+                     floodfill4(x+1,y,oldcolor,newcolor);
+                     floodfill4(x-1,y,oldcolor,newcolor);
+                  floodfill4(x,y+1,oldcolor,newcolor);
+                  floodfill4(x,y-1,oldcolor,newcolor);
+             }
+       }
+       void mouse(int btn, int state, int x, int y)
+       {
+             if(btn==GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+            {
+                     int xi = x;
+                     int yi = (wh-y);
+                     floodfill4(xi,yi,intCol,fillCol);
+             }
+       }
+       void mouse(int btn, int state, int x, int y)
+       {
+             if(btn==GLUT_LEFT_BUTTON && state == GLUT_DOWN)
+            {
+                     int xi = x;
+                     int yi = (wh-y);
+                     floodfill4(xi,yi,intCol,fillCol);
+             }
+       }
        void myinit()
        {
             glViewport(0,0,ww,wh);
@@ -29,6 +77,38 @@
             gluOrtho2D(0.0,(GLdouble)ww,0.0,(GLdouble)wh);
             glMatrixMode(GL_MODELVIEW);
        }
+	
+	void menu(int num)
+	{
+	if(num==0)
+	{
+	glutDestroyWindow(window);
+	exit(0);
+	}
+	else{
+	value=num;
+	//printf("You pressed: %d\n",value);
+	}
+	glutPostRedisplay();
+	}
+
+	void createMenu(void)
+	{
+	submenu_id=glutCreateMenu(menu);
+	glutAddMenuEntry("Square",2);
+	glutAddMenuEntry("Triangle",3);
+	glutAddMenuEntry("Rectangle",4);
+	glutAddMenuEntry("Enter co_ordinates",5);
+	glutAddMenuEntry("Enter sides",6);
+	
+	menu_id=glutCreateMenu(menu);
+	glutAddMenuEntry("Clear",1);
+	glutAddSubMenu("Draw",submenu_id);
+	glutAddMenuEntry("Quit",0);
+	
+	glutAttachMenu(GLUT_RIGHT_BUTTON);
+	
+	}
        int main(int argc, char** argv)
        {
              glutInit(&argc,argv);
@@ -37,6 +117,8 @@
              glutCreateWindow("Flood-Fill-Recursive");
              glutDisplayFunc(display);
              myinit();
+	     createMenu();
+             glutMouseFunc(mouse);
              glutMainLoop();
              return 0;
        }
